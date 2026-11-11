@@ -141,4 +141,7 @@ node scripts/dev.mjs --mock  # 연습 모드 → 브라우저에서 http://local
 | Supabase 보안 Advisor | 경고 0개 |
 | 운영 화면·방명록 조회 | 화면 HTTP 200, API HTTP 200 및 빈 목록 확인 |
 | 실제 운영 저장·재조회 | POST 201, 별도 GET 200에서 저장한 글 확인 완료 |
-| 실제 공휴일 조회 | DATA_GO_KR_KEY 설정 후 추가 확인 필요 |
+| 실제 공휴일 조회 | 2026년 10월 3건·11월 0건, HTTP 200 |
+| 잘못된 월 입력 | month=13 → HTTP 400 |
+| 운영 CDN 캐시 | 동일 조회 MISS → HIT |
+| 운영 함수 리전 | icn1 (서울) |
