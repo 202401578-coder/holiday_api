@@ -101,3 +101,42 @@ node scripts/dev.mjs --mock  # 연습 모드 → 브라우저에서 http://local
 - Git 연결과 배포: https://vercel.com/docs/git
 - 런타임 로그: https://vercel.com/docs/logs/runtime
 - Hobby 요금제: https://vercel.com/docs/plans/hobby
+
+## Supabase 한 줄 방명록 (10주차)
+
+- 화면: `/guestbook.html` · 서버: `/api/guestbook` · 테이블 설계: `supabase/guestbook.sql`
+- 흐름: 브라우저 → Vercel 서버 → Supabase DB. 새로고침해도 글이 DB에 남습니다.
+- GET은 공개키로 최근 50개를 읽습니다. POST는 서버 전용 Secret key로 별명과 메시지를 저장합니다.
+- 별명 1~20자, 메시지 1~200자(한 줄). 브라우저와 서버, DB에서 각각 확인합니다.
+- DB는 RLS를 켜고 공개 역할에 SELECT만 부여합니다. 정책은 `누구나 읽기` 하나입니다.
+- 화면은 방문자 글을 `textContent`로 표시합니다. HTML을 실행하지 않습니다.
+- 익명 실습 방명록입니다. 공개 운영을 확대하기 전에는 로그인 또는 영속적인 요청 횟수 제한을 추가하세요.
+
+### Vercel 환경 변수
+
+| 이름 | 목적 | 설정 |
+|---|---|---|
+| SUPABASE_URL | 프로젝트 API 주소 | 서버 환경 변수 |
+| SUPABASE_PUBLISHABLE_KEY | 방명록 읽기 | 서버 환경 변수 |
+| SUPABASE_SECRET_KEY | 방명록 쓰기 | Sensitive, Production·Preview |
+| DATA_GO_KR_KEY | 공공데이터 공휴일 조회 | Sensitive, Production·Preview |
+
+키 값은 코드·README·채팅에 넣지 않습니다. 환경 변수 변경 후에는 재배포합니다.
+
+### 학습 포인트
+
+1. GitHub는 코드 보관, Vercel은 실행, Supabase는 데이터 보관을 담당합니다.
+2. 환경 변수는 코드 밖에서 서버에 설정을 전달합니다. Secret key는 브라우저에 전달하지 않습니다.
+3. GRANT는 테이블 접근 권한, RLS는 접근 가능한 행을 결정합니다. 둘 다 필요합니다.
+4. 입력 검증은 화면만으로 충분하지 않아 서버와 DB에서도 실행합니다.
+5. `textContent`는 방문자 입력을 글자로 표시해 스크립트 실행을 막습니다.
+
+### 검증 기록 (2026-11-11)
+
+| 항목 | 결과 |
+|---|---|
+| 기존 공휴일 + 방명록 단위 시험 | 24/24 통과 |
+| 공개 역할 권한 | anon·authenticated SELECT만 부여 |
+| Supabase 보안 Advisor | 경고 0개 |
+| 실제 운영 저장·새로고침 | Secret key 설정 후 추가 확인 필요 |
+| 실제 공휴일 조회 | DATA_GO_KR_KEY 설정 후 추가 확인 필요 |

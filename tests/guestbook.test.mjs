@@ -1,0 +1,13 @@
+import { test, afterEach, mock } from 'node:test';
+import assert from 'node:assert/strict';
+import handler from '../api/guestbook.js';
+const call=(method='GET',body,headers={})=>handler.fetch(new Request('https://example.com/api/guestbook',{method,headers:{'Content-Type':'application/json',...headers},body:body===undefined?undefined:JSON.stringify(body)}));
+afterEach(()=>{mock.restoreAll();delete process.env.SUPABASE_URL;delete process.env.SUPABASE_SECRET_KEY;delete process.env.SUPABASE_PUBLISHABLE_KEY;});
+function configure(){process.env.SUPABASE_URL='https://example.supabase.co';process.env.SUPABASE_PUBLISHABLE_KEY='public-test';process.env.SUPABASE_SECRET_KEY='secret-test';}
+test('GET: missing keys returns NO_KEY',async()=>{const res=await call();assert.equal(res.status,500);assert.equal((await res.json()).code,'NO_KEY');});
+test('unsupported methods are rejected',async()=>assert.equal((await call('DELETE')).status,405));
+test('invalid input never reaches DB',async()=>{configure();const upstream=mock.method(globalThis,'fetch',()=>{throw Error('must not run');});for(const body of [null,{}, {nickname:'x',message:''},{nickname:'x',message:'a\nb'},{nickname:'x',message:'a'.repeat(201)}])assert.equal((await call('POST',body)).status,400);assert.equal(upstream.mock.calls.length,0);});
+test('cross-origin writes rejected',async()=>assert.equal((await call('POST',{nickname:'x',message:'hello'},{origin:'https://evil.example'})).status,403));
+test('GET uses only public key and caps results',async()=>{configure();const upstream=mock.method(globalThis,'fetch',async(url,init)=>{assert.equal(init.headers.apikey,'public-test');assert.equal(url.searchParams.get('limit'),'50');return Response.json([]);});const res=await call();assert.equal(res.status,200);assert.deepEqual(await res.json(),{entries:[]});assert.equal(upstream.mock.calls.length,1);});
+test('POST uses secret server-side, trims, ignores user-supplied IDs',async()=>{configure();mock.method(globalThis,'fetch',async(url,init)=>{assert.equal(init.headers.apikey,'secret-test');assert.deepEqual(JSON.parse(init.body),{nickname:'별명',message:'안녕'});return Response.json([{id:'generated',nickname:'별명',message:'안녕'}]);});const res=await call('POST',{nickname:' 별명 ',message:' 안녕 ',id:'forged'});assert.equal(res.status,201);assert.equal((await res.json()).entry.id,'generated');});
+test('DB error response does not disclose upstream or secrets',async()=>{configure();mock.method(globalThis,'fetch',async()=>new Response('secret-test DB details',{status:500}));const res=await call();assert.equal(res.status,502);assert.doesNotMatch(await res.text(),/secret-test|DB details/);});
