@@ -104,6 +104,7 @@ node scripts/dev.mjs --mock  # 연습 모드 → 브라우저에서 http://local
 
 ## Supabase 한 줄 방명록 (10주차)
 
+- 운영 주소: https://holiday-api-gamma.vercel.app/guestbook.html
 - 화면: `/guestbook.html` · 서버: `/api/guestbook` · 테이블 설계: `supabase/guestbook.sql`
 - 흐름: 브라우저 → Vercel 서버 → Supabase DB. 새로고침해도 글이 DB에 남습니다.
 - GET은 공개키로 최근 50개를 읽습니다. POST는 서버 전용 Secret key로 별명과 메시지를 저장합니다.
@@ -138,5 +139,6 @@ node scripts/dev.mjs --mock  # 연습 모드 → 브라우저에서 http://local
 | 기존 공휴일 + 방명록 단위 시험 | 24/24 통과 |
 | 공개 역할 권한 | anon·authenticated SELECT만 부여 |
 | Supabase 보안 Advisor | 경고 0개 |
+| 운영 화면·방명록 조회 | 화면 HTTP 200, API HTTP 200 및 빈 목록 확인 |
 | 실제 운영 저장·새로고침 | Secret key 설정 후 추가 확인 필요 |
 | 실제 공휴일 조회 | DATA_GO_KR_KEY 설정 후 추가 확인 필요 |
