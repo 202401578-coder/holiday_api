@@ -13,6 +13,7 @@ export default {
       return fail(400, 'BAD_DATE', '연도는 2000~2099, 월은 1~12로 입력해 주세요.');
     }
     const key = process.env.HASA_API_KEY?.trim();
+    if (key && !/^[\x21-\x7E]+$/.test(key)) return fail(500, 'INVALID_KEY_FORMAT', 'AI 인증키에 공백이나 한글 등 잘못된 문자가 포함돼 있습니다. 발급받은 키 문자열만 등록해 주세요.');
     if (!key) return fail(500, 'NO_KEY', '서버에 AI 인증키가 설정되지 않았습니다.');
     // 공휴일 조회와 AI 응답 본문 수신까지 합쳐 최대 20초만 기다립니다.
     const controller = new AbortController();
