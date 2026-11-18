@@ -42,6 +42,7 @@ export default {
       const timeout = new Promise((_, reject) => controller.signal.addEventListener('abort', () => reject(new DOMException('Timeout', 'AbortError')), {once: true}));
       return await Promise.race([work(), timeout]);
     } catch (error) {
+      console.error('[suggest] request failed', {name: error?.name, causeCode: error?.cause?.code});
       return error?.name === 'AbortError' || error?.name === 'TimeoutError'
         ? fail(504, 'AI_TIMEOUT', '추천 요청이 20초를 넘었습니다. 잠시 뒤 다시 시도해 주세요.')
         : fail(502, 'AI_NETWORK', 'AI 서비스에 연결하지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
