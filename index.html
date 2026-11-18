@@ -147,12 +147,14 @@
       }
       panel.append(list, meta(data, apiUrl));
       result.replaceChildren(panel);
+      addSuggestions(data);
     }
     function showEmpty(data, apiUrl) {
       const panel = el('div', 'panel empty');
       panel.append(el('h2', '', `${data.year}년 ${data.month}월에는 공휴일이 없습니다`),
         el('p', '', '다른 달을 골라 조회해 보세요.'), meta(data, apiUrl));
       result.replaceChildren(panel);
+      addSuggestions(data);
     }
     function showError(message, hint, status, year, month) {
       const panel = el('div', 'panel error');
@@ -165,6 +167,35 @@
       retry.addEventListener('click', () => search(year, month));
       panel.append(retry);
       result.replaceChildren(panel);
+    }
+
+    function addSuggestions(data) {
+      const panel = el('div', 'panel');
+      panel.style.marginTop = '18px';
+      const button = el('button', '', 'AI 추천 받기');
+      button.type = 'button';
+      const output = el('div');
+      output.setAttribute('aria-live', 'polite');
+      panel.append(el('h2', '', '이 달에 해 볼 만한 일'), button, output);
+      result.append(panel);
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        output.setAttribute('aria-busy', 'true');
+        output.replaceChildren(el('p', '', 'AI 추천을 불러오는 중입니다…'));
+        try {
+          const response = await fetch(`/api/suggest?year=${data.year}&month=${data.month}`, {signal: AbortSignal.timeout(25000)});
+          const body = await response.json();
+          if (!response.ok) throw new Error(body.error || '추천을 불러오지 못했습니다.');
+          const list = el('ol');
+          for (const text of body.suggestions) list.append(el('li', '', text));
+          output.replaceChildren(list, el('p', 'meta', 'AI가 제안한 활동입니다. 방문·예약 전 운영 정보를 확인해 주세요.'));
+        } catch (error) {
+          output.replaceChildren(el('p', 'hint', error.name === 'TimeoutError' ? '응답 시간이 초과되었습니다. 다시 시도해 주세요.' : error.message));
+        } finally {
+          output.setAttribute('aria-busy', 'false');
+          button.disabled = false;
+        }
+      });
     }
 
     let controller = null;
